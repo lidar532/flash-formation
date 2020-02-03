@@ -1,0 +1,127 @@
+#!/usr/bin/python2
+#
+# W. Wright 
+#
+print("DroneKit based formation flight");
+
+LVM   = "192.168.66.152"
+WWDT  = "192.168.66.126"
+
+LEADER = "udp:"+LVM+":14563"
+LEFT   = "udp:"+LVM+":14573"
+RIGHT  = "udp:"+LVM+":14583"
+
+import dronekit as dk
+import time
+from time import sleep
+
+# The leader is the Mission Planner 5760 uas
+print("Conneting Left")
+left = dk.connect( LEFT, wait_ready = True )
+
+print("Conneting Right")
+right = dk.connect( RIGHT, wait_ready = True )
+
+print("Conneting Leader")
+leader = dk.connect( LEADER, wait_ready = True )
+
+# Create and send ADS-B LEFT & Right ADS-B Packets to Leader
+leader_ads = {}
+leader_ads['ads_aflags']  = 1+2+4+8+0x10+0x20+0x80+0x100+0x8000
+leader_ads['ads_icao']    = 2
+leader_ads['ads_type']    = 14           # 14 for UAS
+leader_ads['ads_lat']     = leader.location.global_frame.lat
+leader_ads['ads_lon']     = leader.location.global_frame.lon
+leader_ads['ads_alt']     = leader.location.global_relative_frame.alt 
+leader_ads['ads_heading'] = left.heading*100
+leader_ads['ads_speed']   = 1000.0       # cm/sec
+leader_ads['ads_roc']      = 50000.0      # cm/sec
+leader_ads['ads_squawk']   = 0o1200       # Octal squack code.  1200 for VFR
+leader_ads['ads_callsign'] ='Left'
+
+
+# Create and send ADS-B LEFT & Right ADS-B Packets to Leader
+left_ads = {}
+left_ads['ads_aflags']  = 1+2+4+8+0x10+0x20+0x80+0x100+0x8000
+left_ads['ads_icao']    = 2
+left_ads['ads_type']    = 14           # 14 for UAS
+left_ads['ads_lat']     = left.location.global_frame.lat
+left_ads['ads_lon']     = left.location.global_frame.lon
+left_ads['ads_alt']     = left.location.global_relative_frame.alt 
+left_ads['ads_heading'] = left.heading*100
+left_ads['ads_speed']   = 1000.0       # cm/sec
+left_ads['ads_roc']      = 50000.0      # cm/sec
+left_ads['ads_squawk']   = 0o1200       # Octal squack code.  1200 for VFR
+left_ads['ads_callsign'] ='Left'
+
+
+right_ads = {}
+right_ads['ads_aflags']  = 1+2+4+8+0x10+0x20+0x80+0x100+0x8000
+right_ads['ads_icao']    = 3
+right_ads['ads_type']    = 14           # 14 for UAS
+right_ads['ads_lat']     = right.location.global_frame.lat
+right_ads['ads_lon']     = right.location.global_frame.lon
+right_ads['ads_alt']     = right.location.global_relative_frame.alt 
+right_ads['ads_heading'] = right.heading*100
+right_ads['ads_speed']   = 1000.0       # cm/sec
+right_ads['ads_roc']      = 50000.0      # cm/sec
+right_ads['ads_squawk']   = 0o1200       # Octal squack code.  1200 for VFR
+right_ads['ads_callsign'] ='Right'
+
+def send_ads( t, ads ):
+   adsb_msg = t.message_factory.adsb_vehicle_encode(
+     ads['ads_icao'],         # ui32 ICAO code. anything works here
+     ads['ads_lat']*1e7,      # Latitude in deg * 1e7
+     ads['ads_lon']*1e7,      # Longitude in deg * 1e7
+     0,                       # 0 = baro, 1=GNSS
+     ads['ads_alt']*1000,     # Altitude in mm, 30m = 30000
+     ads['ads_heading'],      # degrees * 100 0-36000
+     ads['ads_speed'],        # speed in cm/sec
+     0,                       # Vertical speed cm/sec
+     ads['ads_callsign'],     # callsign, 9 char null term
+     ads['ads_type'],         # Type.  14=UAS
+     1,                       # time since last comm (secs)
+     ads['ads_aflags'],       # status flags
+     ads['ads_squawk']        # Squak code.  Octal 1200 for VFR
+   )
+   t.send_mavlink( adsb_msg )
+
+
+while 1:
+   leader_ads['ads_lat']     = leader.location.global_frame.lat
+   leader_ads['ads_lon']     = leader.location.global_frame.lon
+   leader_ads['ads_alt']     = leader.location.global_relative_frame.alt 
+   leader_ads['ads_heading'] = leader.heading*100
+
+   left_ads['ads_lat']     = left.location.global_frame.lat
+   left_ads['ads_lon']     = left.location.global_frame.lon
+   left_ads['ads_alt']     = left.location.global_relative_frame.alt 
+   left_ads['ads_heading'] = left.heading*100
+   send_ads(right, left_ads)
+   send_ads(right, left_ads)
+
+   right_ads['ads_lat']     = right.location.global_frame.lat
+   right_ads['ads_lon']     = right.location.global_frame.lon
+   right_ads['ads_alt']     = right.location.global_relative_frame.alt
+   right_ads['ads_heading'] = right.heading*100
+
+   print( '{0:4.1f} {1:4.1f} {2:4.1f}'.format( leader.location.global_relative_frame.alt,
+         leader.location.global_relative_frame.alt - left.location.global_relative_frame.alt,
+         leader.location.global_relative_frame.alt - right.location.global_relative_frame.alt
+   ))
+   send_ads(leader, right_ads)
+   send_ads(leader, left_ads)
+
+   send_ads(left, leader_ads)
+   send_ads(left, right_ads)
+
+   send_ads(right, leader_ads)
+   send_ads(right, left_ads)
+
+   time.sleep(0.2)
+
+print("Ready")
+
+
+
+

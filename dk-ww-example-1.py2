@@ -1,0 +1,66 @@
+#!/usr/bin/python2
+#
+# Python 2.7
+# W. Wright lidar532@gmail.com
+# Example Dronekit python code.
+#
+# This program make a UDP connecto to a UAS
+# and prints out some information from the
+# UAS.
+#
+print("Dronekit Example 1")
+import dronekit
+from time import sleep
+from dronekit import connect, VehicleMode
+v_UDP = 'udp:192.168.66.152:14573'
+print('Attempting to connecting to:%s', v_UDP)
+v  = connect( v_UDP, wait_ready = True )
+print( 'Connected' )
+
+
+
+# Location information
+#print('Leader', ' Local_frame location:  '); 
+print( v.location.local_frame ) 
+print( v.location.global_frame ) 
+print( v.location.global_relative_frame ) 
+
+print( v.location.global_frame.alt ) 
+
+print( v.mode )
+v.mode = VehicleMode('GUIDED') 
+sleep(1)
+print( v.mode )
+sleep(3)
+v.mode = VehicleMode('LOITER') 
+sleep(1)
+print( v.mode )
+
+
+print(v.system_status)
+print "Autopilot Firmware version: %s" % v.version
+print "Autopilot capabilities (supports ftp): %s" % v.capabilities.ftp
+print(v.home_location )
+print(v.rangefinder)
+print("                        Heading deg:", v.heading)
+print "                 Attitude (radians): %s" % v.attitude
+print "                    Global Location: %s" % v.location.global_frame
+print "Global Location (relative altitude): %s" % v.location.global_relative_frame
+print "                     Local Location: %s" % v.location.local_frame    #NED
+print "                           Velocity: %s" % v.velocity
+print "                                GPS: %s" % v.gps_0
+print "                        Groundspeed: %s" % v.groundspeed
+print "                           Airspeed: %s" % v.airspeed
+print "                      Gimbal status: %s" % v.gimbal
+print "                            Battery: %s" % v.battery
+print "                            EKF OK?: %s" % v.ekf_ok
+print "                     Last Heartbeat: %s" % v.last_heartbeat
+print "                        Rangefinder: %s" % v.rangefinder
+print "               Rangefinder distance: %s" % v.rangefinder.distance
+print "                Rangefinder voltage: %s" % v.rangefinder.voltage
+print "                            Heading: %s" % v.heading
+print "                        Is Armable?: %s" % v.is_armable
+print "                      System status: %s" % v.system_status.state
+print "                               Mode: %s" % v.mode.name    # settable
+print "                              Armed: %s" % v.armed    # settable
+
