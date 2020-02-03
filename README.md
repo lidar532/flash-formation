@@ -15,9 +15,17 @@ This code:
 
 ## Requirements
  1. dronekit for Python
+ 1. MAVLink-routed
  1. Mission Planner
  2. QGroundControl
 
 ## ToDo
- * ddddd
- * eeeee
+ * Develop formation code
+ * Migrate to RPI3
+ * Fan out to run on 3 different RPI, one per UAS
+ * Add ADS-B receiver(s) to the RPI
+ * Route ADS-B data to one or all of the UAS GroundControllers
+ * Get SITL running on RPI
+ * Get MAVLink-routerd on RPI
+ * Web interface with GUI to adjust formation software
+ * Migrate to UAS aircraft
